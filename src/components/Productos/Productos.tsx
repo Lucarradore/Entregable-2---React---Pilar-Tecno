@@ -4,6 +4,7 @@ import { Formik, Form, Field, ErrorMessage } from "formik";
 import * as Yup from "yup";
 import { eliminarProducto, obtenerProductos, obtenerCategoria, obtenerBajoStock, actualizarStock } from "../../services/productos";
 import FormularioProducto from "../FormularioProducto/FormularioProducto";
+import Prenda from "../Prenda/Prenda";
 import type { Producto } from "../../types/Producto";
 
 const moneda = new Intl.NumberFormat("es-AR", { style: "currency", currency: "ARS" });
@@ -56,9 +57,9 @@ export default function Productos({ versionListado }: { versionListado: number }
     } finally { setEliminando(false); }
   }
 
-  return <section className="py-5" aria-busy={cargando}>
+  return <section className="catalog-section" aria-busy={cargando}>
     <Container>
-      <h2>Productos</h2>
+      <h2>La colección <span className="text-secondary small">/ {cargando ? "..." : productos.length + " productos"}</span></h2>
       <Formik initialValues={{ modo: "todos", valor: "" }}
         validate={valores => {
           if (valores.modo === "categoria" && !valores.valor.trim()) return { valor: "Ingresá una categoría." };
@@ -67,7 +68,7 @@ export default function Productos({ versionListado }: { versionListado: number }
           return {};
         }}
         onSubmit={valores => setFiltro({ modo: valores.modo, valor: valores.valor.trim() })}>
-        {({ values, setFieldValue }) => <Form className="d-flex flex-wrap gap-2 align-items-end mb-4">
+        {({ values, setFieldValue }) => <Form className="catalog-filters d-flex flex-wrap gap-2 align-items-end mb-4">
           <div><label htmlFor="filtro-modo" className="form-label">Consultar</label>
             <Field as="select" name="modo" id="filtro-modo" className="form-select"
               onChange={(evento: React.ChangeEvent<HTMLSelectElement>) => {
@@ -93,7 +94,7 @@ export default function Productos({ versionListado }: { versionListado: number }
           {!productos.length ? <p role="status">No hay productos para esta consulta.</p> :
             <Row xs={1} sm={2} lg={3} className="g-4 text-start">
               {productos.map(producto => <Col key={producto._id}>
-                <Card className="h-100 shadow-sm"><Card.Body>
+                <Card className="h-100 shadow-sm"><div className="product-art"><Prenda tipo={producto.categoria + " " + producto.nombre} color={["#203fc1", "#25304b", "#576249"][producto.nombre.length % 3]} /><span className="product-art-note">ILUSTRACIÓN DE REFERENCIA</span></div><Card.Body>
                   <span className="text-secondary">{producto.categoria}</span>
                   <Card.Title as="h3" className="h5">{producto.nombre}</Card.Title>
                   <Card.Text>{producto.descripcion}</Card.Text>

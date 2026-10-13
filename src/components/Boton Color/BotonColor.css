@@ -1,0 +1,22 @@
+body.modo-oscuro,
+body.modo-oscuro #root {
+  background-color: #121212;
+  color: white;
+}
+
+body.modo-oscuro section,
+body.modo-oscuro main,
+body.modo-oscuro h1 {
+  background-color: #121212 !important;
+  color: white;
+  
+}
+
+body.modo-oscuro .bg-light {
+  background-color: #121212 !important;
+}
+
+body.modo-oscuro .bg-white {
+  background-color: #242424 !important;
+  color: white;
+}
