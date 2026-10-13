@@ -1,87 +1,38 @@
 import axios from "axios";
-import type { Producto, ProductoNuevo } from "../types/Producto";
+import type { Producto, ProductoNuevo, CambioStock } from "../types/Producto";
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, "");
-
+const api = axios.create({
+  baseURL: (import.meta.env.VITE_API_URL || "http://localhost:3000").replace(/\/+$/, ""),
+  timeout: 10000,
+});
+api.interceptors.response.use(respuesta => respuesta, (error: unknown) => {
+  if (axios.isCancel(error)) return Promise.reject(error);
+  const mensaje = axios.isAxiosError<{ mensaje?: string }>(error)
+    ? error.response?.data?.mensaje || "No se pudo conectar con la API. Intentá nuevamente."
+    : "Ocurrió un error inesperado.";
+  return Promise.reject(new Error(mensaje));
+});
 export async function obtenerProductos(signal?: AbortSignal): Promise<Producto[]> {
-  try { 
-    
-
-    const respuesta = await axios.get<Producto[]>(
-    `${API_URL}/productos`,
-    {signal}
-    );
-    const datos = respuesta.data;
-    
-    
-  if (!Array.isArray(datos) || !datos.every(producto =>
-    producto && typeof producto._id === "string" &&
-    typeof producto.nombre === "string" &&
-    typeof producto.precio === "number" &&
-    typeof producto.cantidad === "number" &&
-    (producto.descripcion == null || typeof producto.descripcion === "string") &&
-    (producto.categoria == null || typeof producto.categoria === "string")
-  )) {
-    throw new Error("El servidor devolvió una lista de productos inválida.");
-  }
-  return datos;
-  } catch (error) {
-      if (signal?.aborted) throw error;
-
-      throw new Error("No se pudieron cargar los productos.");
-    }
+  return (await api.get<Producto[]>("/productos", { signal })).data;
 }
-
-export async function crearProducto(
-  datos: ProductoNuevo
-): Promise<Producto> {
-  try {
-    const respuesta = await axios.post<Producto>(
-      `${API_URL}/productos`,
-      datos
-    );
-
-    return respuesta.data;
-  } catch {
-    throw new Error("No se pudo crear el producto.");
-  }
+export async function obtenerCategoria(categoria: string, signal?: AbortSignal): Promise<Producto[]> {
+  return (await api.get<Producto[]>(`/productos/categoria/${encodeURIComponent(categoria)}`, { signal })).data;
 }
-
-export async function actualizarProducto(
-  id: string,
-  datos: ProductoNuevo
-): Promise<Producto> {
-  try {
-    const respuesta = await axios.put<Producto>(
-      `${API_URL}/productos/${id}`,
-      datos
-    );
-
-    return respuesta.data;
-  } catch {
-    throw new Error("No se pudo actualizar el producto.");
-  }
+export async function obtenerBajoStock(cantidad: number, signal?: AbortSignal): Promise<Producto[]> {
+  return (await api.get<Producto[]>(`/productos/bajo-stock/${cantidad}`, { signal })).data;
 }
-
+export async function crearProducto(datos: ProductoNuevo): Promise<Producto> {
+  return (await api.post<Producto>("/productos", datos)).data;
+}
+export async function actualizarProducto(id: string, datos: ProductoNuevo): Promise<Producto> {
+  return (await api.put<Producto>(`/productos/${id}`, datos)).data;
+}
 export async function eliminarProducto(id: string): Promise<void> {
-  try {
-    await axios.delete(`${API_URL}/productos/${id}`);
-  } catch {
-    throw new Error("No se pudo eliminar el producto.");
-  }
+  await api.delete(`/productos/${id}`);
 }
-
-export async function obtenerProductoPorId(
-  id: string
-): Promise<Producto> {
-  try {
-    const respuesta = await axios.get<Producto>(
-      `${API_URL}/productos/${id}`
-    );
-
-    return respuesta.data;
-  } catch {
-    throw new Error("No se pudo obtener el producto.");
-  }
+export async function obtenerProductoPorId(id: string, signal?: AbortSignal): Promise<Producto> {
+  return (await api.get<Producto>(`/productos/${id}`, { signal })).data;
 }
-
+export async function actualizarStock(cambios: CambioStock[]): Promise<void> {
+  await api.put("/productos/actualizar-stock", cambios);
+}

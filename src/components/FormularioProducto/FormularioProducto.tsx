@@ -1,135 +1,60 @@
+import { useId } from "react";
 import * as Yup from "yup";
-import type { ProductoNuevo } from "../../types/Producto";
-import { crearProducto } from "../../services/productos";
 import { Formik, Form, Field, ErrorMessage } from "formik";
+import type { Producto, ProductoNuevo } from "../../types/Producto";
+import { actualizarProducto, crearProducto } from "../../services/productos";
 
-interface FormularioProductoProps {
+interface Props {
   onProductoCreado: () => void;
+  producto?: Producto;
+  onGuardando?: (guardando: boolean) => void;
 }
-
-const esquemaProducto = Yup.object({
-  nombre: Yup.string().required("El nombre es obligatorio"),
+const esquema = Yup.object({
+  nombre: Yup.string().trim().required("El nombre es obligatorio"),
   descripcion: Yup.string(),
-  precio: Yup.number()
-    .min(0, "El precio no puede ser negativo")
-    .required("El precio es obligatorio"),
-  cantidad: Yup.number()
-    .integer("La cantidad debe ser un número entero")
-    .min(0, "La cantidad no puede ser negativa")
-    .required("La cantidad es obligatoria"),
   categoria: Yup.string(),
+  precio: Yup.number().typeError("Ingresá un precio válido").min(0, "El precio no puede ser negativo").required("El precio es obligatorio"),
+  cantidad: Yup.number().typeError("Ingresá una cantidad válida").integer("La cantidad debe ser entera").min(0, "La cantidad no puede ser negativa").required("La cantidad es obligatoria"),
 });
-
-const valoresIniciales: ProductoNuevo = {
-  nombre: "",
-  descripcion: "",
-  precio: 0,
-  cantidad: 0,
-  categoria: "",
-};
-
-const FormularioProducto = ({
-  onProductoCreado,
-}: FormularioProductoProps) => {
-  return (
-    <Formik
-      initialValues={valoresIniciales}
-      validationSchema={esquemaProducto}
-      onSubmit={async (valores, { resetForm }) => {
-        await crearProducto(valores);
-            onProductoCreado();
-            resetForm();
-      }}
-    >
-      <Form>
-        <div className="mb-3">
-            <label htmlFor="nombre">Nombre</label>
-
-            <Field
-                id="nombre"
-                name="nombre"
-                type="text"
-                className="form-control"
-            />
-
-            <ErrorMessage
-                name="nombre"
-                component="div"
-                className="text-danger"
-            />
-        </div>  
-
-        <div className="mb-3">
-            <label htmlFor="precio">Precio</label>
-
-            <Field
-                id="precio"
-                name="precio"
-                type="number"
-                className="form-control"
-            />
-
-            <ErrorMessage
-                name="precio"
-                component="div"
-                className="text-danger"
-            />
-        </div>
-
-        <div className="mb-3">
-            <label htmlFor="descripcion">Descripcion</label>
-            <Field
-                id="descripcion"
-                name="descripcion"
-                type="textarea"
-                className="form-control"
-            />
-
-            <ErrorMessage
-                name="descripcion"
-                component="div"
-                className="text-danger"
-            />
-        </div>
-
-        <div className="mb-3">
-            <label htmlFor="cantidad">Cantidad</label>
-            <Field
-                id="cantidad"
-                name="cantidad"
-                type="number"
-                className="form-control"
-            />
-
-            <ErrorMessage
-                name="cantidad"
-                component="div"
-                className="text-danger"
-            />
-        </div>
-
-        <div className="mb-3">
-            <label htmlFor="categoria">Categoria</label>
-            <Field
-                id="categoria"
-                name="categoria"
-                type="text"
-                className="form-control"
-            />
-
-            <ErrorMessage
-                name="categoria"
-                component="div"
-                className="text-danger"
-            />
-        </div>
-
-        <button type="submit" className="btn btn-primary">
-        Crear producto
+export default function FormularioProducto({ onProductoCreado, producto, onGuardando }: Props) {
+  const prefijo = useId();
+  const iniciales: ProductoNuevo = {
+    nombre: producto?.nombre ?? "", descripcion: producto?.descripcion ?? "",
+    precio: producto?.precio ?? 0, cantidad: producto?.cantidad ?? 0,
+    categoria: producto?.categoria ?? "",
+  };
+  return <Formik initialValues={iniciales} enableReinitialize validationSchema={esquema}
+    onSubmit={async (valores, { resetForm, setStatus }) => {
+      setStatus(undefined);
+      onGuardando?.(true);
+      const datos = { ...valores, nombre: valores.nombre.trim(), categoria: valores.categoria.trim(), descripcion: valores.descripcion.trim() };
+      try {
+        if (producto) await actualizarProducto(producto._id, datos);
+        else await crearProducto(datos);
+        resetForm();
+        onProductoCreado();
+        if (!producto) setStatus({ mensaje: "Producto creado correctamente." });
+      } catch (error) {
+        setStatus({ error: error instanceof Error ? error.message : "No se pudo guardar." });
+      } finally { onGuardando?.(false); }
+    }}>
+    {({ isSubmitting, status }) => <Form noValidate>
+      <fieldset disabled={isSubmitting}>
+        {(["nombre", "descripcion", "precio", "cantidad", "categoria"] as const).map(campo => <div className="mb-3" key={campo}>
+          <label htmlFor={prefijo + campo} className="form-label">{{ nombre: "Nombre", descripcion: "Descripción", precio: "Precio", cantidad: "Cantidad", categoria: "Categoría" }[campo]}</label>
+          <Field id={prefijo + campo} name={campo} as={campo === "descripcion" ? "textarea" : "input"}
+            type={campo === "precio" || campo === "cantidad" ? "number" : "text"}
+            min={campo === "precio" || campo === "cantidad" ? 0 : undefined}
+            step={campo === "precio" ? "any" : campo === "cantidad" ? 1 : undefined}
+            className="form-control" />
+          <ErrorMessage name={campo} component="div" className="text-danger" />
+        </div>)}
+        {status?.error && <div role="alert" className="alert alert-danger">{status.error}</div>}
+        {status?.mensaje && <div role="status" className="alert alert-success">{status.mensaje}</div>}
+        <button type="submit" className="btn btn-primary" disabled={isSubmitting}>
+          {isSubmitting ? "Guardando..." : producto ? "Guardar cambios" : "Crear producto"}
         </button>
-      </Form>
-    </Formik>
-  );
-};
-
-export default FormularioProducto;
+      </fieldset>
+    </Form>}
+  </Formik>;
+}

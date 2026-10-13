@@ -1,46 +1,6 @@
 import { Navbar, Nav, Container } from "react-bootstrap";
-
-interface EnlaceNavegacion {
-  texto: string;
-  href: string;
+import { Link } from "react-router-dom";
+interface Props { marca: string; enlaces: { texto: string; href: string }[] }
+export default function BarraNavegacion({ marca, enlaces }: Props) {
+  return <Navbar expand="lg"><Container><Navbar.Brand as={Link} to="/">{marca}</Navbar.Brand><Navbar.Toggle aria-controls="navbar-principal" /><Navbar.Collapse id="navbar-principal"><Nav>{enlaces.map(enlace => <Nav.Link key={enlace.href} as={Link} to={enlace.href}>{enlace.texto}</Nav.Link>)}</Nav></Navbar.Collapse></Container></Navbar>;
 }
-
-interface BarraNavegacionProps {
-  marca: string;
-  enlaces: EnlaceNavegacion[];
-}
-
-const BarraNavegacion = ({
-  marca,
-  enlaces,
-}: BarraNavegacionProps) => {
-  return (
-    <Navbar
-      bg="dark"
-      variant="dark"
-      expand="lg"
-      sticky="top"
-      className="shadow-sm py-3"
-    >
-      <Container>
-        <Navbar.Brand href="#inicio" className="fw-bold">
-          {marca}
-        </Navbar.Brand>
-
-        <Navbar.Toggle aria-controls="navbar-principal" />
-
-        <Navbar.Collapse id="navbar-principal">
-          <Nav className="ms-auto gap-lg-3">
-            {enlaces.map((enlace) => (
-              <Nav.Link key={enlace.href} href={enlace.href}>
-                {enlace.texto}
-              </Nav.Link>
-            ))}
-          </Nav>
-        </Navbar.Collapse>
-      </Container>
-    </Navbar>
-  );
-};
-
-export default BarraNavegacion;

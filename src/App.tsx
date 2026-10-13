@@ -1,27 +1,23 @@
+import { Routes, Route, Link } from "react-router-dom";
+import PaginaRopa from "./pages/PaginaRopa";
+import PaginaInicio from "./pages/PaginaInicio";
+import PaginaContacto from "./pages/PaginaContacto";
 import BarraNavegacion from "./components/BarraNavegacion/BarraNavegacion";
-import SeccionHero from "./components/Seccion Hero/SeccionHero";
-
-const enlacesNavegacion = [
-  { texto: "Inicio", href: "#inicio" },
-  { texto: "Cursos", href: "#cursos" },
-  { texto: "Contacto", href: "#contacto" },
+import Footer from "./components/Footer/Footer";
+const enlaces = [
+  { texto: "Inicio", href: "/" },
+  { texto: "Productos", href: "/productos" },
+  { texto: "Contacto", href: "/contacto" },
 ];
-
-function App() {
-  return (
-    <>
-      <BarraNavegacion
-        marca="Pilar Tecno"
-        enlaces={enlacesNavegacion}
-      />
-
-      <SeccionHero
-        titulo="Pilar Tecno"
-        subtitulo="Bienvenido al curso de React"
-        mensaje="Próximamente: cursos"
-      />
-    </>
-  );
+export default function App() {
+  return <>
+    <BarraNavegacion marca="Pilar Tecno" enlaces={enlaces} />
+    <main><Routes>
+      <Route path="/" element={<PaginaInicio />} />
+      <Route path="/productos" element={<PaginaRopa />} />
+      <Route path="/contacto" element={<PaginaContacto />} />
+      <Route path="*" element={<div className="container py-5"><h1>Página no encontrada</h1><Link to="/">Volver al inicio</Link></div>} />
+    </Routes></main>
+    <Footer />
+  </>;
 }
-
-export default App;
