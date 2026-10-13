@@ -1,10 +1,11 @@
 import {Modal, Button} from "react-bootstrap";
 import { useState } from "react";
+import "./BotonColor.css";
 
 const BotonColor = () => {
     const [mostrarModal, setMostrarModal] = useState(false);
-    const [color, setColor] = useState("#07ff8b");
-    const [colorAplicado, setColorAplicado] = useState("#07ff8b");
+    const [color, setColor] = useState("#aeaeae");
+    const [colorAplicado, setColorAplicado] = useState("#aeaeae");
 
     const aceptarColor = () => {
         setColorAplicado(color);
@@ -25,7 +26,7 @@ const BotonColor = () => {
             <Modal show={mostrarModal} onHide={()=>setMostrarModal(false)} centered>
                 <Modal.Header closeButton>
                     <Modal.Title>
-                        Elegí un color
+                        Cambiar Modo
                     </Modal.Title>
                 </Modal.Header>
 
@@ -39,6 +40,7 @@ const BotonColor = () => {
                     <Button variant="primary" onClick={aceptarColor}>Aceptar</Button>
                 </Modal.Footer>
             </Modal>
+
         </>
     );
 };
